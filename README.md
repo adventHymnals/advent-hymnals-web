@@ -11,7 +11,7 @@
 This repository contains the production deployment configuration for [Advent Hymnals](https://adventhymnals.org), a digital collection of Adventist hymnody spanning 160+ years of heritage. The application provides search capabilities across 13 complete hymnal collections with browseable metadata by meters, tunes, themes, authors, and composers.
 
 ### 🔗 Source Code
-- **Main Repository**: [advent-hymnals-mono-repo](https://github.com/adventhymnals/advent-hymnals-mono-repo)
+- **Main Repository**: [adventhymnals-monorepo](https://github.com/adventhymnals/adventhymnals-monorepo)
 - **Container Registry**: [ghcr.io/adventhymnals/advent-hymnals-web](https://ghcr.io/adventhymnals/advent-hymnals-web)
 
 ## 🚀 Quick Start
@@ -122,7 +122,7 @@ docker run -d \
 
 This repository automatically receives updated container images from the main source repository through GitHub Actions. The workflow:
 
-1. **Source code changes** pushed to [main repository](https://github.com/adventhymnals/advent-hymnals-mono-repo)
+1. **Source code changes** pushed to [main repository](https://github.com/adventhymnals/adventhymnals-monorepo)
 2. **Automated build** creates optimized Docker image
 3. **Image published** to GitHub Container Registry
 4. **Deployment triggered** (manual or automated)
@@ -244,22 +244,22 @@ docker compose logs --tail=100 advent-hymnals-web | grep ERROR
 ## 📚 Additional Resources
 
 ### Documentation
-- [Deployment Guide](https://github.com/adventhymnals/advent-hymnals-mono-repo/blob/main/docs/DEPLOYMENT.md)
-- [Google Search Console Setup](https://github.com/adventhymnals/advent-hymnals-mono-repo/blob/main/docs/GOOGLE-SUBMISSION.md)
-- [Development Setup](https://github.com/adventhymnals/advent-hymnals-mono-repo/blob/main/README.md)
+- [Deployment Guide](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/docs/DEPLOYMENT.md)
+- [Google Search Console Setup](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/docs/GOOGLE-SUBMISSION.md)
+- [Development Setup](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/README.md)
 
 ### Support
-- **Issues**: [Report issues](https://github.com/adventhymnals/advent-hymnals-mono-repo/issues)
-- **Discussions**: [Community discussions](https://github.com/adventhymnals/advent-hymnals-mono-repo/discussions)
-- **Source Code**: [Main repository](https://github.com/adventhymnals/advent-hymnals-mono-repo)
+- **Issues**: [Report issues](https://github.com/adventhymnals/adventhymnals-monorepo/issues)
+- **Discussions**: [Community discussions](https://github.com/adventhymnals/adventhymnals-monorepo/discussions)
+- **Source Code**: [Main repository](https://github.com/adventhymnals/adventhymnals-monorepo)
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/adventhymnals/advent-hymnals-mono-repo/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/LICENSE) file for details.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see the [contributing guidelines](https://github.com/adventhymnals/advent-hymnals-mono-repo/blob/main/CONTRIBUTING.md) in the main repository.
+Contributions are welcome! Please see the [contributing guidelines](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/CONTRIBUTING.md) in the main repository.
 
 ---
 
