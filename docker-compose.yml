@@ -16,7 +16,7 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -28,17 +28,26 @@ services:
       - "com.docker.compose.service=web"
 
   nginx:
-    image: nginx:alpine
+    image: nginx:latest
     container_name: advent-hymnals-nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/templates:/etc/nginx/templates
+      - ./nginx/domains.txt:/etc/nginx/domains.txt
+      - ./nginx/entrypoint.sh:/docker-entrypoint.d/30-setup-dns.sh
       - ./logs/nginx:/var/log/nginx
       - certbot-web:/var/www/certbot
       - certbot-certs:/etc/letsencrypt
+    environment:
+      - NGINX_HOST=${NGINX_HOST:-adventhymnals.org}
+      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
+      - NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
     depends_on:
       advent-hymnals-web:
         condition: service_healthy
@@ -50,24 +59,6 @@ services:
       - "com.docker.compose.project=advent-hymnals"
       - "com.docker.compose.service=nginx"
 
-  certbot:
-    image: certbot/certbot
-    container_name: advent-hymnals-certbot
-    volumes:
-      - certbot-web:/var/www/certbot
-      - certbot-certs:/etc/letsencrypt
-      - ./logs/certbot:/var/log/letsencrypt
-    command: >
-      sh -c "while :; do
-        certbot renew --webroot --webroot-path=/var/www/certbot --quiet
-        sleep 12h
-      done"
-    restart: unless-stopped
-    networks:
-      - advent-hymnals-network
-    labels:
-      - "com.docker.compose.project=advent-hymnals"
-      - "com.docker.compose.service=certbot"
 
 volumes:
   hymnal-data:

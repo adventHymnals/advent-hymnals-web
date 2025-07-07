@@ -46,7 +46,7 @@ docker compose logs -f advent-hymnals-web
 
 ### 3. Access
 - **Application**: `http://your-server-ip`
-- **Health Check**: `http://your-server-ip/api/health`
+- **Health Check**: `http://your-server-ip/health`
 
 ## 📁 Repository Structure
 
@@ -82,41 +82,35 @@ advent-hymnals-web/
 
 #### `advent-hymnals-web`
 - **Image**: `ghcr.io/adventhymnals/advent-hymnals-web:latest`
-- **Ports**: `80:3000` (HTTP), `443:3000` (HTTPS with SSL termination)
+- **Network**: Internal docker network only (not exposed to host)
 - **Health Check**: Built-in endpoint monitoring
 - **Volumes**: Persistent data storage and log retention
 
-#### `nginx-proxy` (Optional)
-- **Image**: `nginx:alpine`
-- **Purpose**: SSL termination, reverse proxy, rate limiting
-- **Profile**: `nginx` (enable with `--profile nginx`)
+#### `nginx`
+- **Image**: `nginx:latest`
+- **Purpose**: SSL termination, reverse proxy, automatic certificate management
+- **Ports**: `80:80` (HTTP), `443:443` (HTTPS)
+- **Features**: Let's Encrypt integration, automatic SSL setup
 
-## 🔧 Deployment Options
+## 🔧 Deployment
 
-### Option 1: Direct Docker Compose (Recommended)
+### Standard Deployment (Recommended)
 ```bash
-# Simple deployment
+# Deploy with nginx reverse proxy and SSL support
 docker compose up -d
 ```
 
-### Option 2: With Nginx Reverse Proxy
+### Development/Testing
 ```bash
-# With SSL termination and advanced features
-docker compose --profile nginx up -d
+# Quick test without SSL
+NGINX_HOST=localhost docker compose up -d
 ```
 
-### Option 3: Manual Container Run
-```bash
-# Pull and run manually
-docker pull ghcr.io/adventhymnals/advent-hymnals-web:latest
-docker run -d \
-  --name advent-hymnals-web \
-  -p 80:3000 \
-  -e NEXT_PUBLIC_GA_ID=your-ga-id \
-  -e SITE_URL=https://your-domain.com \
-  -v hymnal-data:/app/data \
-  ghcr.io/adventhymnals/advent-hymnals-web:latest
-```
+### SSL Certificate Setup
+The nginx service automatically handles SSL certificate generation using Let's Encrypt:
+- Certificates are generated on first run
+- Automatic renewal configured
+- Domain configuration in `nginx/domains.txt`
 
 ## 🏗️ CI/CD Integration
 
@@ -144,7 +138,7 @@ This repository automatically receives updated container images from the main so
 ### Health Monitoring
 ```bash
 # Check application health
-curl http://localhost/api/health
+curl http://localhost/health
 
 # Monitor container status
 docker compose ps
@@ -154,10 +148,11 @@ docker compose logs -f
 ```
 
 ### Performance Metrics
-- **Health Check Endpoint**: `/api/health`
+- **Health Check Endpoint**: `/health`
 - **Built-in Analytics**: Google Analytics integration
 - **Container Logs**: Application and access logs
 - **Resource Usage**: Docker stats and monitoring
+- **SSL Monitoring**: Automatic certificate renewal
 
 ### Backup and Recovery
 ```bash
@@ -184,9 +179,11 @@ docker run --rm \
 - **Input validation** and sanitization
 
 ### SSL/TLS Configuration
-When using the nginx profile, place your SSL certificates in:
-- `./nginx/ssl/fullchain.pem` (certificate chain)
-- `./nginx/ssl/privkey.pem` (private key)
+SSL certificates are automatically managed:
+- **Let's Encrypt**: Automatic certificate generation
+- **Auto-renewal**: Certificates renewed automatically
+- **Domain Config**: Edit `nginx/domains.txt` for your domains
+- **Manual Certs**: Place in `/etc/letsencrypt/live/` volume if needed
 
 ## 🐛 Troubleshooting
 
