@@ -2,7 +2,7 @@
 
 services:
   advent-hymnals-web:
-    image: ghcr.io/adventhymnals/advent-hymnals-web:latest
+    image: ${ADVENT_HYMNALS_IMAGE:-ghcr.io/adventhymnals/advent-hymnals-web:latest}
     container_name: advent-hymnals-web
     environment:
       - NODE_ENV=production
