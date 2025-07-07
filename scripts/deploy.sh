@@ -51,6 +51,17 @@ check_requirements() {
     log_success "Requirements check passed"
 }
 
+create_external_network() {
+    log_info "Ensuring external Docker network exists..."
+    
+    if docker network ls | grep -q web-network; then
+        log_info "External network 'web-network' already exists"
+    else
+        docker network create web-network
+        log_success "Created external network 'web-network'"
+    fi
+}
+
 check_environment() {
     log_info "Checking environment configuration..."
     
@@ -114,6 +125,9 @@ backup_data() {
 
 deploy() {
     log_info "Deploying Advent Hymnals..."
+    
+    # Ensure external network exists
+    create_external_network
     
     # Stop existing containers
     if docker compose ps -q | grep -q .; then
@@ -208,6 +222,7 @@ main() {
         "deploy"|"")
             log_info "Starting Advent Hymnals deployment..."
             check_requirements
+            create_external_network
             check_environment
             backup_data
             pull_latest_image
@@ -241,6 +256,18 @@ main() {
         "backup")
             backup_data
             ;;
+        "ssl")
+            log_info "Setting up SSL certificates..."
+            if [[ -f "./scripts/setup-ssl.sh" ]]; then
+                ./scripts/setup-ssl.sh
+            else
+                log_error "SSL setup script not found at ./scripts/setup-ssl.sh"
+                exit 1
+            fi
+            ;;
+        "network")
+            create_external_network
+            ;;
         "help")
             echo "Advent Hymnals Deployment Script"
             echo "Usage: $0 [command]"
@@ -253,6 +280,8 @@ main() {
             echo "  restart           - Restart containers"
             echo "  update            - Pull latest image and restart"
             echo "  backup            - Create data backup"
+            echo "  ssl               - Set up SSL certificates with Let's Encrypt"
+            echo "  network           - Create external Docker network"
             echo "  help              - Show this help message"
             ;;
         *)
