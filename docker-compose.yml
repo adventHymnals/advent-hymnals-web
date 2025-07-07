@@ -1,4 +1,4 @@
-version: '3.8'
+# Docker Compose configuration for Advent Hymnals production deployment
 
 services:
   advent-hymnals-web:
@@ -40,7 +40,8 @@ services:
       - certbot-web:/var/www/certbot
       - certbot-certs:/etc/letsencrypt
     depends_on:
-      - advent-hymnals-web
+      advent-hymnals-web:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - advent-hymnals-network
