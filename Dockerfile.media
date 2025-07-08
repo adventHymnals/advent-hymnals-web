@@ -1,0 +1,21 @@
+# Dockerfile for Advent Hymnals Media Server
+FROM nginx:alpine
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy nginx configuration
+COPY nginx/media-server.conf /etc/nginx/nginx.conf
+
+# Create directory for media files
+RUN mkdir -p /usr/share/nginx/html/audio /usr/share/nginx/html/images
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
+# Expose port 80
+EXPOSE 80
+
+# Use default nginx command
+CMD ["nginx", "-g", "daemon off;"]
