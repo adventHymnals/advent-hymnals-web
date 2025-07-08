@@ -97,7 +97,7 @@ server {
 
 EOF
   elif [[ "$domain" == "media."* ]]; then
-    # Media server block
+    # Media server block - serve files directly
     cat >> /etc/nginx/templates/default.conf.template << EOF
 # Media server
 server {
@@ -114,17 +114,60 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
     
-    location / {
-        proxy_pass http://media-server;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        
-        # Add CORS headers for media files
+    # Root directory for media files
+    root /usr/share/nginx/html;
+    
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+    
+    # Audio files
+    location ~* ^/audio/.+\.(mp3|mid|midi|wav|ogg|m4a)\$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
         add_header Access-Control-Allow-Origin "*" always;
         add_header Access-Control-Allow-Methods "GET, HEAD, OPTIONS" always;
         add_header Access-Control-Allow-Headers "Range" always;
+        
+        # Enable range requests for audio seeking
+        add_header Accept-Ranges bytes;
+    }
+    
+    # Image files
+    location ~* ^/images/.+\.(jpg|jpeg|png|gif|webp|svg|ico)\$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header Access-Control-Allow-Methods "GET, HEAD, OPTIONS" always;
+    }
+    
+    # Root path - serve a simple index page
+    location = / {
+        return 200 "Advent Hymnals Media Server\n";
+        add_header Content-Type text/plain;
+    }
+    
+    # Block access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Block access to backup files
+    location ~ ~\$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # 404 for other paths
+    location / {
+        return 404 "File not found\n";
+        add_header Content-Type text/plain;
     }
 }
 
