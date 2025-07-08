@@ -1,0 +1,28 @@
+# Docker Compose override for media server
+services:
+  media-server:
+    image: ${MEDIA_SERVER_IMAGE:-ghcr.io/adventhymnals/media-server:latest}
+    container_name: advent-hymnals-media
+    volumes:
+      - media-files:/usr/share/nginx/html:ro
+      - ./nginx/media-server.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - advent-hymnals-network
+    labels:
+      - "com.docker.compose.project=advent-hymnals"
+      - "com.docker.compose.service=media"
+
+volumes:
+  media-files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/sources

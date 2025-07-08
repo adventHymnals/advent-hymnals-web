@@ -72,11 +72,15 @@ cd /opt/advent-hymnals
 # Pull latest images
 docker-compose pull
 
-# Start all services
-docker-compose up -d
+# Start web application only
+docker compose up -d
+
+# Or start with media server (if image is available)
+docker compose -f docker-compose.yml -f docker-compose.media.yml up -d
 
 # Check health
-curl https://media.adventhymnals.org/health
+curl https://adventhymnals.org/api/health
+curl https://media.adventhymnals.org/health  # Only if media server is running
 ```
 
 ## API Endpoints

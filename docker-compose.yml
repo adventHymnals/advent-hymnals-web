@@ -27,25 +27,6 @@ services:
       - "com.docker.compose.project=advent-hymnals"
       - "com.docker.compose.service=web"
 
-  media-server:
-    image: ${MEDIA_SERVER_IMAGE:-ghcr.io/adventhymnals/media-server:latest}
-    container_name: advent-hymnals-media
-    volumes:
-      - media-files:/usr/share/nginx/html:ro
-      - ./nginx/media-server.conf:/etc/nginx/nginx.conf:ro
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    networks:
-      - advent-hymnals-network
-    labels:
-      - "com.docker.compose.project=advent-hymnals"
-      - "com.docker.compose.service=media"
-
   nginx:
     image: nginx:latest
     container_name: advent-hymnals-nginx
@@ -70,8 +51,6 @@ services:
     depends_on:
       advent-hymnals-web:
         condition: service_healthy
-      media-server:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - advent-hymnals-network
@@ -88,12 +67,6 @@ volumes:
       type: none
       o: bind
       device: ./data
-  media-files:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/sources
   certbot-web:
   certbot-certs:
 
