@@ -1,254 +1,376 @@
-# Advent Hymnals - Deployment Repository
+# Advent Hymnals - Traefik Deployment
 
-🎵 **Production deployment configuration for the Advent Hymnals digital hymnal collection**
+🎵 **Production deployment configuration for the Advent Hymnals digital hymnal collection using Traefik**
 
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![GitHub Container Registry](https://img.shields.io/badge/GitHub_Container_Registry-2088FF?style=for-the-badge&logo=github&logoColor=white)](https://ghcr.io)
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Traefik](https://img.shields.io/badge/Traefik-24A1C1?style=for-the-badge&logo=traefik&logoColor=white)](https://traefik.io/)
 
 ## 📖 About
 
 This repository contains the production deployment configuration for [Advent Hymnals](https://adventhymnals.org), a digital collection of Adventist hymnody spanning 160+ years of heritage. The application provides search capabilities across 13 complete hymnal collections with browseable metadata by meters, tunes, themes, authors, and composers.
 
+**New in this version**: Complete **Traefik integration** replaces nginx for automatic SSL/TLS certificate management, modern reverse proxy features, and simplified deployment.
+
 ### 🔗 Source Code
-- **Main Repository**: [adventhymnals-monorepo](https://github.com/adventhymnals/adventhymnals-monorepo)
+- **Main Repository**: [adventhymnals-monorepo](https://github.com/adventhymnals/adventhymnals-monorepo)  
 - **Container Registry**: [ghcr.io/adventhymnals/advent-hymnals-web](https://ghcr.io/adventhymnals/advent-hymnals-web)
+
+## 🏗️ Architecture Overview
+
+The deployment consists of three main services:
+
+1. **🚦 Traefik** - Modern reverse proxy with automatic SSL/TLS from Let's Encrypt
+2. **🌐 Advent Hymnals Web** - Main Next.js application 
+3. **📁 Media Server** - Dedicated service for serving hymnal files and media content
+
+### Features
+
+- ✅ **Automatic SSL/TLS** with Let's Encrypt (HTTP/HTTPS challenge)
+- ✅ **HTTP to HTTPS redirection** 
+- ✅ **Traefik Dashboard** with basic authentication
+- ✅ **Health checks** for all services
+- ✅ **CORS handling** for media server
+- ✅ **Log aggregation** in structured directories
+- ✅ **Data persistence** with bind mounts
+- ✅ **Multi-domain support** (main site + media subdomain)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose installed
-- A server with SSH access
-- Domain name configured (optional but recommended)
 
-### 1. Clone and Configure
+- Docker and Docker Compose installed
+- **GitHub CLI (`gh`)** installed and authenticated
+- Domain name pointing to your server
+- Ports 80, 443, and 8080 accessible
+
+### 1. Clone and Setup
+
 ```bash
 # Clone this repository
 git clone https://github.com/adventhymnals/advent-hymnals-web.git
 cd advent-hymnals-web
 
-# Copy and configure environment variables
+# Copy and configure environment
 cp .env.example .env
-# Edit .env with your configuration
+nano .env  # Edit with your actual values
 ```
 
-### 2. Deploy
+### 2. Login to GitHub Container Registry
+
 ```bash
-# Start the application
-docker compose up -d
+# Authenticate with GitHub CLI (if not already done)
+gh auth login
+
+# Login to GitHub Container Registry using automated script
+./docker-login.sh
+```
+
+### 3. Start the Services
+
+```bash
+# Start all services with Traefik
+docker-compose up -d
 
 # Check status
-docker compose ps
+docker-compose ps
 
 # View logs
-docker compose logs -f advent-hymnals-web
+docker-compose logs -f
 ```
 
-### 3. Access
-- **Application**: `http://your-server-ip`
-- **Health Check**: `http://your-server-ip/health`
+### 4. Access Your Services
+
+Once deployed, you can access:
+
+- **🌐 Main website**: `https://yourdomain.com`
+- **📁 Media server**: `https://media.yourdomain.com`  
+- **🚦 Traefik dashboard**: `https://traefik.yourdomain.com`
+
+## ⚙️ Environment Configuration
+
+Edit the `.env` file with your specific values:
+
+### 🔧 Required Variables
+
+```bash
+# Your primary domain name
+DOMAIN=adventhymnals.org
+
+# Email for Let's Encrypt certificate registration  
+ACME_EMAIL=admin@adventhymnals.org
+
+# Traefik dashboard authentication (generate with htpasswd)
+TRAEFIK_AUTH=admin:$$apr1$$8EVjn/nj$$GiLUZqcbuBMBdmvfX9PyE1
+```
+
+### 🎯 Optional Variables
+
+```bash
+# Custom Docker images
+ADVENT_HYMNALS_IMAGE=ghcr.io/adventhymnals/advent-hymnals-web:latest
+MEDIA_SERVER_IMAGE=ghcr.io/adventhymnals/media-server:latest
+
+# Data storage paths (absolute paths recommended)
+DATA_PATH=/opt/advent-hymnals/data
+MEDIA_PATH=/opt/advent-hymnals/data/sources
+
+# Analytics and verification
+NEXT_PUBLIC_GA_ID=G-JPQZVQ70L9
+GOOGLE_VERIFICATION=your-google-verification-code
+YANDEX_VERIFICATION=your-yandex-verification-code
+```
 
 ## 📁 Repository Structure
 
 ```
 advent-hymnals-web/
-├── docker-compose.yml          # Production configuration
-├── docker-compose.override.yml # Development overrides
-├── .env.example               # Environment template
-├── nginx/
-│   └── nginx.conf            # Nginx reverse proxy config
-├── scripts/
-│   ├── deploy.sh            # Deployment script
-│   ├── backup.sh            # Backup script
-│   └── health-check.sh      # Health monitoring
-├── logs/                    # Application logs (created at runtime)
-├── data/                    # Persistent data (created at runtime)
-└── README.md               # This file
+├── docker-compose.yml      # Traefik-based production config
+├── .env.example           # Environment template  
+├── .env                   # Your environment (create from example)
+├── docker-login.sh        # GitHub Container Registry login script
+├── logs/                  # Log files
+│   ├── app/              # Application logs
+│   ├── media/            # Media server logs
+│   └── traefik/          # Traefik logs
+├── data/                  # Application data
+│   └── sources/          # Media files
+└── README.md              # This file
 ```
 
-## ⚙️ Configuration
+## 🔐 SSL Certificate Management
 
-### Environment Variables
+Traefik automatically handles SSL certificates using Let's Encrypt:
 
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `NEXT_PUBLIC_GA_ID` | Google Analytics measurement ID | No | `G-JPQZVQ70L9` |
-| `SITE_URL` | Primary site URL | Yes | `https://adventhymnals.org` |
-| `NEXT_PUBLIC_SITE_URL` | Public site URL | Yes | `https://adventhymnals.org` |
-| `GOOGLE_VERIFICATION` | Google Search Console verification | No | `abc123xyz` |
-| `YANDEX_VERIFICATION` | Yandex verification code | No | `def456uvw` |
+- **🔄 Automatic generation** for all configured domains
+- **⏰ Automatic renewal** before expiration  
+- **🏆 TLS challenge validation** (port 443 must be accessible)
+- **💾 Persistent storage** in Docker volume `traefik-letsencrypt`
 
-### Docker Compose Services
+## 🛡️ Security Features
 
-#### `advent-hymnals-web`
-- **Image**: `ghcr.io/adventhymnals/advent-hymnals-web:latest`
-- **Network**: Internal docker network only (not exposed to host)
-- **Health Check**: Built-in endpoint monitoring
-- **Volumes**: Persistent data storage and log retention
+### Traefik Dashboard Protection
 
-#### `nginx`
-- **Image**: `nginx:latest`
-- **Purpose**: SSL termination, reverse proxy, automatic certificate management
-- **Ports**: `80:80` (HTTP), `443:443` (HTTPS)
-- **Features**: Let's Encrypt integration, automatic SSL setup
+The Traefik dashboard is protected with HTTP Basic Authentication. Generate a secure password hash:
 
-## 🔧 Deployment
-
-### Standard Deployment (Recommended)
 ```bash
-# Deploy with nginx reverse proxy and SSL support
-docker compose up -d
+# Install htpasswd (if not available)
+sudo apt install apache2-utils  # Ubuntu/Debian
+# OR
+brew install httpie             # macOS
+
+# Generate htpasswd hash (escape $ characters for Docker Compose)
+echo $(htpasswd -nb admin your-secure-password) | sed -e s/\\$/\\$\\$/g
 ```
 
-### Development/Testing
-```bash
-# Quick test without SSL
-NGINX_HOST=localhost docker compose up -d
-```
+Add the output to your `.env` file as `TRAEFIK_AUTH`.
 
-### SSL Certificate Setup
-The nginx service automatically handles SSL certificate generation using Let's Encrypt:
-- Certificates are generated on first run
-- Automatic renewal configured
-- Domain configuration in `nginx/domains.txt`
+### CORS Configuration
 
-## 🏗️ CI/CD Integration
-
-This repository automatically receives updated container images from the main source repository through GitHub Actions. The workflow:
-
-1. **Source code changes** pushed to [main repository](https://github.com/adventhymnals/adventhymnals-monorepo)
-2. **Automated build** creates optimized Docker image
-3. **Image published** to GitHub Container Registry
-4. **Deployment triggered** (manual or automated)
-
-### Automated Deployment Setup
-
-1. **Configure SSH access** on your server
-2. **Set GitHub Secrets** in the main repository:
-   ```
-   DEPLOY_HOST=your-server-ip
-   DEPLOY_USER=your-ssh-username
-   DEPLOY_SSH_KEY=your-private-ssh-key
-   NEXT_PUBLIC_GA_ID=your-google-analytics-id
-   ```
-3. **Push to main branch** triggers automatic deployment
+The media server includes CORS headers configured to:
+- ✅ Allow access from your main domain
+- ❌ Prevent unauthorized cross-origin requests  
+- 🔧 Support preflight OPTIONS requests
 
 ## 📊 Monitoring and Maintenance
 
-### Health Monitoring
+### View Logs
+
 ```bash
-# Check application health
-curl http://localhost/health
+# All services
+docker-compose logs -f
 
-# Monitor container status
-docker compose ps
-
-# View real-time logs
-docker compose logs -f
+# Specific services
+docker-compose logs -f advent-hymnals-web
+docker-compose logs -f media-server  
+docker-compose logs -f traefik
 ```
 
-### Performance Metrics
-- **Health Check Endpoint**: `/health`
-- **Built-in Analytics**: Google Analytics integration
-- **Container Logs**: Application and access logs
-- **Resource Usage**: Docker stats and monitoring
-- **SSL Monitoring**: Automatic certificate renewal
+### Health Checks
 
-### Backup and Recovery
+All services include comprehensive health checks:
+
 ```bash
-# Backup persistent data
-docker run --rm \
-  -v advent-hymnals-web_hymnal-data:/source \
-  -v $(pwd)/backups:/backup \
-  alpine tar czf /backup/hymnal-data-$(date +%Y%m%d).tar.gz -C /source .
+# Check overall service health
+docker-compose ps
 
-# Restore from backup
-docker run --rm \
-  -v advent-hymnals-web_hymnal-data:/target \
-  -v $(pwd)/backups:/backup \
-  alpine tar xzf /backup/hymnal-data-YYYYMMDD.tar.gz -C /target
+# Inspect specific service health
+docker inspect advent-hymnals-web --format='{{.State.Health.Status}}'
+
+# Test endpoints directly
+curl -f http://localhost:3000/health  # App health (internal)
+curl -f https://yourdomain.com/      # External access test
 ```
 
-## 🔐 Security
+### Updates
 
-### Built-in Security Features
-- **HTTPS enforcement** (with nginx profile)
-- **Security headers** (CSP, HSTS, X-Frame-Options)
-- **Rate limiting** (API and general requests)
-- **Content Security Policy** configured for Google Analytics
-- **Input validation** and sanitization
+To update to new application versions:
 
-### SSL/TLS Configuration
-SSL certificates are automatically managed:
-- **Let's Encrypt**: Automatic certificate generation
-- **Auto-renewal**: Certificates renewed automatically
-- **Domain Config**: Edit `nginx/domains.txt` for your domains
-- **Manual Certs**: Place in `/etc/letsencrypt/live/` volume if needed
+```bash
+# 1. Login to registry (if token expired)
+./docker-login.sh
+
+# 2. Pull latest images
+docker-compose pull
+
+# 3. Restart services with new images
+docker-compose up -d
+
+# 4. Verify deployment
+docker-compose ps
+```
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### 🔍 Common Issues
 
-#### Container Won't Start
+#### 1. Certificate Generation Fails
 ```bash
-# Check logs for errors
-docker compose logs advent-hymnals-web
-
-# Verify environment configuration
-docker compose config
+# Symptoms: SSL errors, "certificate not found" 
+# Solutions:
+- Ensure ports 80 and 443 are open and accessible
+- Check DNS: your domain should point to the server IP
+- Verify ACME_EMAIL is a valid email address
+- Check Traefik logs: docker-compose logs traefik
 ```
 
-#### Port Conflicts
+#### 2. Services Won't Start  
 ```bash
-# Check port usage
-sudo netstat -tulpn | grep :80
+# Check environment variables
+docker-compose config
 
-# Use different ports in docker-compose.yml
-ports:
-  - "8080:3000"  # Use port 8080 instead
+# Verify data directories exist with correct permissions
+ls -la logs/ data/
+
+# Review startup logs
+docker-compose logs
 ```
 
-#### Image Pull Failures
+#### 3. GitHub Container Registry Access Denied
 ```bash
-# Login to GitHub Container Registry
-echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+# Re-authenticate with GitHub CLI
+gh auth login
 
-# Manual image pull
-docker pull ghcr.io/adventhymnals/advent-hymnals-web:latest
+# Check GitHub token permissions (needs read:packages)
+gh auth status
+
+# Re-run Docker login
+./docker-login.sh
 ```
 
-#### Environment Variable Issues
+#### 4. Traefik Dashboard Inaccessible
 ```bash
-# Check loaded environment
-docker compose exec advent-hymnals-web env | grep NEXT_PUBLIC
+# Verify dashboard subdomain in DNS
+nslookup traefik.yourdomain.com
 
-# Restart with new environment
-docker compose down && docker compose up -d
+# Check basic auth configuration  
+echo "$TRAEFIK_AUTH" | base64 -d
+
+# Test without auth (temporarily remove middleware)
 ```
 
-### Performance Issues
+### 🔧 Debug Commands
+
 ```bash
+# Check Docker networks
+docker network ls | grep advent
+
+# Inspect Traefik configuration
+docker exec advent-hymnals-traefik traefik version
+
+# Test internal connectivity
+docker exec advent-hymnals-web wget -qO- http://localhost:3000/health
+
+# Check certificate status  
+docker exec advent-hymnals-traefik ls -la /letsencrypt/acme.json
+
 # Monitor resource usage
-docker stats advent-hymnals-web
-
-# Check application health
-curl -s http://localhost/api/health | jq
-
-# Analyze logs for errors
-docker compose logs --tail=100 advent-hymnals-web | grep ERROR
+docker stats --no-stream
 ```
+
+## 💾 Data Backup
+
+Important locations to backup regularly:
+
+```bash
+# 1. SSL certificates (automatic backup recommended)
+docker volume create --name backup-letsencrypt
+docker run --rm -v traefik-letsencrypt:/source -v backup-letsencrypt:/backup alpine cp -r /source /backup
+
+# 2. Application data
+tar czf advent-hymnals-backup-$(date +%Y%m%d).tar.gz ./data/
+
+# 3. Logs (optional, for debugging)
+tar czf logs-backup-$(date +%Y%m%d).tar.gz ./logs/
+
+# 4. Configuration
+tar czf config-backup-$(date +%Y%m%d).tar.gz .env docker-compose.yml
+```
+
+## 🚀 Production Deployment Best Practices
+
+For production deployment:
+
+1. **🔒 Security**: Use strong passwords for `TRAEFIK_AUTH`
+2. **📊 Monitoring**: Configure log aggregation and alerting  
+3. **💾 Backups**: Automate data and certificate backups
+4. **🔄 Updates**: Set up automated security updates
+5. **🏋️ Resources**: Set resource limits in docker-compose.yml if needed
+6. **🔥 Firewalls**: Configure UFW or iptables appropriately
+7. **📈 Monitoring**: Consider adding Prometheus/Grafana
+
+### Example Resource Limits
+
+```yaml
+services:
+  advent-hymnals-web:
+    # ... other configuration
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+```
+
+## 🏗️ Development Mode
+
+For development and testing, you can:
+
+1. **Add port mappings** for direct access:
+   ```yaml
+   advent-hymnals-web:
+     ports:
+       - "3000:3000"  # Direct access
+   ```
+
+2. **Mount source code** (if developing locally):
+   ```yaml
+   advent-hymnals-web:
+     volumes:
+       - ./src:/app/src  # Live code changes
+   ```
+
+3. **Set development environment**:
+   ```bash
+   NODE_ENV=development
+   ```
 
 ## 📚 Additional Resources
 
-### Documentation
-- [Deployment Guide](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/docs/DEPLOYMENT.md)
-- [Google Search Console Setup](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/docs/GOOGLE-SUBMISSION.md)
-- [Development Setup](https://github.com/adventhymnals/adventhymnals-monorepo/blob/main/README.md)
+### 📖 Documentation
+- [Traefik Documentation](https://doc.traefik.io/traefik/)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [Let's Encrypt Documentation](https://letsencrypt.org/docs/)
+- [Main Advent Hymnals Repository](https://github.com/adventhymnals/adventhymnals-monorepo)
 
-### Support
-- **Issues**: [Report issues](https://github.com/adventhymnals/adventhymnals-monorepo/issues)
-- **Discussions**: [Community discussions](https://github.com/adventhymnals/adventhymnals-monorepo/discussions)
-- **Source Code**: [Main repository](https://github.com/adventhymnals/adventhymnals-monorepo)
+### 🆘 Support
+- **🐛 Issues**: [Report issues](https://github.com/adventhymnals/adventhymnals-monorepo/issues)
+- **💬 Discussions**: [Community discussions](https://github.com/adventhymnals/adventhymnals-monorepo/discussions)  
+- **📚 Source Code**: [Main repository](https://github.com/adventhymnals/adventhymnals-monorepo)
 
 ## 📄 License
 
@@ -260,8 +382,9 @@ Contributions are welcome! Please see the [contributing guidelines](https://gith
 
 ---
 
-**Advent Hymnals** - Preserving and sharing 160+ years of Adventist hymnody heritage through modern digital technology.
+**Advent Hymnals** - Preserving and sharing 160+ years of Adventist hymnody heritage through modern digital technology, now with **Traefik-powered deployment**.
 
 [![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![Powered by Docker](https://img.shields.io/badge/Powered%20by-Docker-blue?style=flat-square&logo=docker)](https://www.docker.com/)
-[![Deployed on GitHub](https://img.shields.io/badge/Deployed%20on-GitHub-green?style=flat-square&logo=github)](https://github.com/)
+[![Deployed with Traefik](https://img.shields.io/badge/Deployed%20with-Traefik-24A1C1?style=flat-square&logo=traefik)](https://traefik.io/)
+[![GitHub Container Registry](https://img.shields.io/badge/Images%20on-GHCR-green?style=flat-square&logo=github)](https://ghcr.io/)
